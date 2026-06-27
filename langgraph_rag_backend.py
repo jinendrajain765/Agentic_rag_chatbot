@@ -15,11 +15,12 @@ import sqlite3
 from langchain_community.tools import WikipediaQueryRun
 from langchain_community.utilities import WikipediaAPIWrapper
 
+
 #from langgraph.checkpoint.sqlite import sqlite3, sqlite3
 
 
 from langchain_huggingface import HuggingFaceEmbeddings
-from langchain_community.vectorstores import FAISS
+from langchain_community.vectorstores import Chroma
 from langchain_text_splitters import RecursiveCharacterTextSplitter
 import tempfile
 import os
@@ -29,7 +30,7 @@ load_dotenv()
 
 model = ChatGroq(model="llama-3.3-70b-versatile")
 
-embeddings = HuggingFaceEmbeddings(model_name="sentence-transformers/all-MiniLM-L6-v2")
+embeddings = HuggingFaceEmbeddings(model_name="BAAI/bge-large-en-v1.5")
 
 
 # PDF retriever store (per thread) — Sir's approach
@@ -77,12 +78,12 @@ def ingest_pdf(file_bytes: bytes, thread_id: str, filename: Optional[str] = None
         )
         chunks = splitter.split_documents(docs)
 
-        # create FAISS vectorstore and retriever
+        # create chroma vectorstore and retriever
         # k=4 means fetch top 4 most relevant chunks for a query
-        vector_store = FAISS.from_documents(chunks, embeddings)
-        retriever = vector_store.as_retriever(
-            search_type="similarity", search_kwargs={"k": 4}
-        )
+        vector_store = Chroma.from_documents(chunks,embeddings,
+                    persist_directory=f"./chroma_db/{thread_id}"
+                )
+        retriever= vector_store.as_retriever(search_type='similarity',search_kwargs={'k':4})
 
         # store retriever and metadata mapped to this thread_id
         # each thread gets its own retriever — completely isolated
@@ -190,15 +191,10 @@ def chat_node(state: chatstate, config=None):
     # system message tells LLM its role and instructs it to pass thread_id when using rag_tool
     system_message = SystemMessage(
         content=(
-         "You are a helpful assistant. "
-        "STRICT RULE: After calling ANY tool, give ONLY a short clean answer. "
-        "NEVER print raw tool output, JSON, chunks, or metadata. "
-        "For PDF questions — call rag_tool with thread_id "
-        f"`{thread_id}` and then answer in 1-2 sentences only. "
-        "For calculator — just say the result number only. "
-        "For search — give a proper detailed summary of the search results in 9-10 lines. "
-        "For stock — just say the price only."
-        "Keep all answers SHORT and CLEAN."
+     f"You are a helpful assistant. Thread ID: {thread_id}. "
+        "For PDF questions use rag_tool with this thread_id. "
+        "For math use calculator. For stocks use get_stock_price. "
+        "For web use search. Give short clean answers only."
         )
     )
 

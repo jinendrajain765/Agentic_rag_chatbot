@@ -1,7 +1,22 @@
+
 .env
 chatbot.db
 chatbot.db-shm
 chatbot.db-wal
+chroma_db/
+
+
 __pycache__/
 *.pyc
 .vscode/
+
+# Old learning files 
+frontend.py
+langgraph_backend.py
+langgraph_database_backend.py
+langgraph_mcp_backend.py
+langgraph_tool_backend.py
+streamlit_frontend.py
+streamlit_frontend_streaming.py
+streamlit_database_frontend.py
+streamlit_mcp_frontend.py
