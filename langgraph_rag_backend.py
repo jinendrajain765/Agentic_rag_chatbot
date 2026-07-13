@@ -61,7 +61,7 @@ def ingest_pdf(file_bytes: bytes, thread_id: str, filename: Optional[str] = None
     if not file_bytes:
         raise ValueError("No bytes received for ingestion.")
 
-    # PyPDFLoader needs a file path so we save bytes to a temp file first
+    
     with tempfile.NamedTemporaryFile(delete=False, suffix=".pdf") as temp_file:
         temp_file.write(file_bytes)
         temp_path = temp_file.name
@@ -110,7 +110,7 @@ def ingest_pdf(file_bytes: bytes, thread_id: str, filename: Optional[str] = None
 # tools
 
 search_tool = DuckDuckGoSearchResults(region='us-en')  # lang=parameter
-# where u are making tool always add this doc string ("""ai reads this and understands """)
+
 wiki_tool=WikipediaQueryRun(api_wrapper=WikipediaAPIWrapper())
 @tool
 def calculator(first_num: float, second_num: float, operation: str) -> dict:
@@ -164,10 +164,9 @@ def rag_tool(query: str, thread_id: Optional[str] = None) -> dict:
     return  "\n\n".join(context)
 
 
-#making tool list
+
 tools = [get_stock_price, calculator, search_tool, rag_tool,wiki_tool]
 
-#make the llm tool-aware
 model_with_tools = model.bind_tools(tools)
 
 
