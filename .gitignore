@@ -20,3 +20,6 @@ streamlit_frontend.py
 streamlit_frontend_streaming.py
 streamlit_database_frontend.py
 streamlit_mcp_frontend.py
+backup/
+frontend,py
+requirements_backup.txt
