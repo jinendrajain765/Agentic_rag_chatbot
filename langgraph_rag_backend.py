@@ -14,6 +14,8 @@ from langgraph.checkpoint.sqlite import SqliteSaver
 import sqlite3
 from langchain_community.tools import WikipediaQueryRun
 from langchain_community.utilities import WikipediaAPIWrapper
+from langchain_community.retrievers import BM25Retriever
+from langchain.retrievers import EnsembleRetriever
 
 
 #from langgraph.checkpoint.sqlite import sqlite3, sqlite3
@@ -53,11 +55,7 @@ def _get_retriever(thread_id: Optional[str]):
 
 
 def ingest_pdf(file_bytes: bytes, thread_id: str, filename: Optional[str] = None) -> dict:
-    """
-    Build a FAISS retriever for the uploaded PDF and store it for the thread.
-    Called from frontend when user uploads a PDF.
-    Returns a summary dict that can be surfaced in the UI.
-    """
+    
     if not file_bytes:
         raise ValueError("No bytes received for ingestion.")
 
@@ -66,9 +64,14 @@ def ingest_pdf(file_bytes: bytes, thread_id: str, filename: Optional[str] = None
         temp_file.write(file_bytes)
         temp_path = temp_file.name
 
+        
+
     try:
         loader = PyPDFLoader(temp_path)
         docs = loader.load()
+        print("2. PDFloaded")
+
+
 
         # chunk_size=1000 — each chunk is 1000 characters
         # chunk_overlap=200 — 200 characters shared between chunks so context is not lost at boundaries
@@ -77,13 +80,31 @@ def ingest_pdf(file_bytes: bytes, thread_id: str, filename: Optional[str] = None
             chunk_size=1000, chunk_overlap=200, separators=["\n\n", "\n", " ", ""]
         )
         chunks = splitter.split_documents(docs)
+        
+        
+        
 
         # create chroma vectorstore and retriever
         # k=4 means fetch top 4 most relevant chunks for a query
         vector_store = Chroma.from_documents(chunks,embeddings,
                     persist_directory=f"./chroma_db/{thread_id}"
                 )
-        retriever= vector_store.as_retriever(search_type='similarity',search_kwargs={'k':4})
+         
+        
+        
+        
+
+        similarity_retriever= vector_store.as_retriever(search_type='similarity',search_kwargs={'k':4})
+
+        #bm25 keyword search
+        bm25_retriver=BM25Retriever.from_documents(chunks)
+        bm25_retriver.k = 4
+        
+        #hybrid retriever
+        retriever=EnsembleRetriever(retrievers=[bm25_retriver,similarity_retriever], weights=[0.5,0.5])
+        
+
+
 
         # store retriever and metadata mapped to this thread_id
         # each thread gets its own retriever — completely isolated
@@ -100,7 +121,7 @@ def ingest_pdf(file_bytes: bytes, thread_id: str, filename: Optional[str] = None
             "chunks": len(chunks),
         }
     finally:
-        # FAISS keeps copies in memory so temp file is safe to delete
+        
         try:
             os.remove(temp_path)
         except OSError:

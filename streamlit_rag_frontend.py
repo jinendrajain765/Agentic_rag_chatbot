@@ -110,7 +110,7 @@ CONFIG = {
 
 # side bar Ui
 
-st.sidebar.title("langgraph_chatbot")
+st.sidebar.title("Agentic Rag chatbot")
 
 if st.sidebar.button("New chat"): # if the new chat button is clicked simple return reset chat it will do the things 
      reset_chat()
