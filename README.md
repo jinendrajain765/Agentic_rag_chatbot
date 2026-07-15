@@ -1,164 +1,222 @@
 # Agentic RAG Chatbot
 
-An intelligent multi-tool agentic chatbot built with **LangGraph** and **Streamlit**, powered by **Groq LLaMA 3.3 70B**. The chatbot autonomously selects tools to answer questions — from searching the web, performing calculations, fetching live stock prices, to answering questions from uploaded PDF documents using RAG.
+An intelligent **Agentic Retrieval-Augmented Generation (RAG)** chatbot built using **LangGraph** and **Streamlit**, powered by **OpenAI GPT-OSS 120B (via Groq)**. The chatbot autonomously selects the appropriate tool to answer user queries, including document retrieval, web search, Wikipedia search, mathematical calculations, and live stock price retrieval.
+
+The document retrieval pipeline uses **Hybrid Search (ChromaDB + BM25)** to combine semantic similarity and keyword-based retrieval, improving retrieval quality over similarity search alone.
 
 ---
 
-## Features
+## Highlights
 
-- **RAG (Retrieval Augmented Generation)** — Upload any PDF and chat with it. Each conversation thread has its own isolated PDF context using per-thread ChromaDB vector stores.
-- **Web Search** — Real-time web search powered by DuckDuckGo
-- **Wikipedia Search** — Factual queries answered using Wikipedia
-- **Calculator** — Performs basic arithmetic operations
-- **Stock Price** — Fetches live stock prices via Alpha Vantage API
-- **Persistent Memory** — Full chat history stored in SQLite, survives server restarts
-- **Multi-thread Conversations** — Each chat session is an independent thread with its own history
-- **Resume Chat** — Click any past conversation from the sidebar to resume it
-- **Streaming Responses** — Token-by-token streaming for real-time output
-- **Autonomous Tool Selection** — LLM decides which tool to call based on the user query
+- Hybrid Retrieval using **ChromaDB + BM25 (EnsembleRetriever)**
+- OpenAI **GPT-OSS 120B** served through **Groq**
+- LangGraph ReAct Agent with autonomous tool selection
+- Per-thread persistent PDF knowledge base
+- SQLite-based persistent conversational memory
+- Streaming responses in Streamlit
+- Evaluated using **RAGAS**
 
 ---
 
+# Features
 
-## Architecture
+- **Hybrid RAG** — Upload a PDF and chat with it using a hybrid retrieval pipeline combining semantic search (ChromaDB) and keyword search (BM25).
+- **Autonomous Tool Selection** — The agent automatically decides which tool to invoke based on the user's query.
+- **Web Search** — Real-time web search powered by DuckDuckGo.
+- **Wikipedia Search** — Retrieve factual information from Wikipedia.
+- **Calculator Tool** — Perform arithmetic operations.
+- **Live Stock Price Tool** — Retrieve real-time stock prices using Alpha Vantage.
+- **Persistent Chat Memory** — SQLite checkpointing preserves conversation history across application restarts.
+- **Per-thread PDF Isolation** — Each conversation maintains an independent document index and memory.
+- **Resume Previous Conversations** — Continue any previous chat from the sidebar.
+- **Streaming Responses** — Token-by-token response generation for improved user experience.
+
+---
+
+# Architecture
 
 ```
 User Input
-    |
-Streamlit Frontend (streamlit_rag_frontend.py)
-    |
-LangGraph ReAct Agent (langgraph_rag_backend.py)
-    |
-LLM decides which tool to use
-    |
-    |---------|---------|---------|---------|
-    |         |         |         |         |
-DuckDuckGo  Calculator  Stock  Wikipedia  RAG Tool
-                        API                  |
-                                        ChromaDB
-                                     (per thread PDF)
-    |
-SQLite Checkpointer (persistent memory)
-    |
-Streaming Response to Streamlit UI
+      │
+      ▼
+Streamlit Frontend
+      │
+      ▼
+LangGraph ReAct Agent
+      │
+      ▼
+LLM decides which tool to invoke
+      │
+ ┌────┼──────────┬──────────┬──────────┬────────────┐
+ │    │          │          │          │            │
+ ▼    ▼          ▼          ▼          ▼
+DuckDuckGo   Calculator   Stocks   Wikipedia   Hybrid RAG
+                                              │
+                             ┌────────────────┴──────────────┐
+                             │                               │
+                             ▼                               ▼
+                     ChromaDB Retriever             BM25 Retriever
+                             │                               │
+                             └──────── EnsembleRetriever ────┘
+                                              │
+                                              ▼
+                                    Retrieved Context
+                                              │
+                                              ▼
+                                  GPT-OSS 120B (Groq)
+                                              │
+                                              ▼
+                                   Streaming Response
 ```
 
 ---
 
-## Tech Stack
+# Tech Stack
 
 | Component | Technology |
-|---|---|
-| LLM | Groq — LLaMA 3.3 70B Versatile |
-| Agent Framework | LangGraph 0.2.70 |
+|------------|------------|
+| LLM | OpenAI GPT-OSS 120B (via Groq) |
+| Agent Framework | LangGraph |
 | Frontend | Streamlit |
-| Embeddings | HuggingFace — BAAI/bge-large-en-v1.5 |
-| Vector Store | ChromaDB (per thread, persistent on disk) |
-| Memory | SQLite (persistent checkpointing) |
+| Embedding Model | HuggingFace BAAI/bge-large-en-v1.5 |
+| Vector Database | ChromaDB |
+| Keyword Retriever | BM25 |
+| Hybrid Retriever | LangChain EnsembleRetriever |
+| Persistent Memory | SQLite Checkpointer |
 | Web Search | DuckDuckGo |
-| Wiki Search | Wikipedia |
-| Stock Data | Alpha Vantage API |
+| Knowledge Search | Wikipedia |
+| Stock API | Alpha Vantage |
+| Evaluation | RAGAS |
 
 ---
 
-
-
-## Project Structure
+# Project Structure
 
 ```
 agentic_rag_chatbot/
-├── langgraph_rag_backend.py    # LangGraph agent, tools, RAG setup
-├── streamlit_rag_frontend.py   # Streamlit UI, thread management, streaming
-├── requirements.txt            # Python dependencies
-├── .env.example                # Environment variables template
-├── .gitignore                  # Git ignore rules
-└── README.md                   # Project documentation
+├── langgraph_rag_backend.py
+├── streamlit_rag_frontend.py
+├── evaluate_rag.py
+├── requirements.txt
+├── .gitignore
+└── README.md
 ```
 
+---
 
-## Setup and Installation
+# Setup
 
-### 1. Clone the repository
+### Clone Repository
+
 ```bash
 git clone https://github.com/jinendrajain765/Agentic_rag_chatbot.git
 cd Agentic_rag_chatbot
 ```
 
+### Install Dependencies
 
-### 2. Install dependencies
 ```bash
 pip install -r requirements.txt
 ```
 
-### 3. Set up environment variables
-```bash
-cp .env.example .env
+### Configure Environment Variables
+
+Create a `.env` file and add:
+
 ```
-# 4
-Add your API key to `.env`:
-```
-GROQ_API_KEY=your_groq_api_key_here
+GROQ_API_KEY=your_api_key
 ```
 
-Get your free Groq API key at [console.groq.com](https://console.groq.com)
+### Run
 
-### 5. Run the application
 ```bash
 streamlit run streamlit_rag_frontend.py
 ```
 
 ---
 
+# How It Works
 
+The chatbot follows the **ReAct (Reason + Act)** workflow.
 
-## How It Works
+1. The user submits a query.
+2. GPT-OSS 120B determines whether a tool is required.
+3. If necessary, LangGraph invokes the selected tool.
+4. Tool outputs are returned to the model.
+5. The model synthesizes the final response and streams it back to the user.
 
-The chatbot uses a **ReAct (Reason + Act)** loop:
-
-1. **Think** — LLM reads the user query and reasons about which tool to use
-2. **Act** — LLM calls the appropriate tool with the right parameters
-3. **Observe** — LLM reads the tool output
-4. **Repeat** — If needed, LLM calls another tool
-5. **Answer** — LLM synthesizes a clean final response
-
-This makes the agent autonomous — the developer does not hardcode which tool to use, the LLM decides at runtime based on the query.
+This allows the chatbot to dynamically decide which tool to use without hardcoded routing logic.
 
 ---
 
-## Key Design Decisions
+# Key Design Decisions
 
-**Per-thread PDF isolation** — Each conversation thread has its own ChromaDB vector store persisted to disk under `./chroma_db/{thread_id}`. This means different users can upload different PDFs in different threads without any interference, and PDFs persist across server restarts.
+### Hybrid Retrieval
 
-**ChromaDB over FAISS** — ChromaDB persists vector data to disk so uploaded PDFs survive server restarts. FAISS stores everything in RAM which means PDFs are lost on restart.
+The document retrieval pipeline combines **semantic search (ChromaDB)** with **keyword search (BM25)** using LangChain's `EnsembleRetriever`. This approach improves retrieval robustness by leveraging both semantic similarity and exact keyword matching.
 
-**BAAI/bge-large-en-v1.5 embeddings** — Upgraded from all-MiniLM-L6-v2 to BGE large for significantly better retrieval quality. BGE large has 1024 dimensions vs 384 for MiniLM.
+### Per-thread Document Isolation
 
-**SQLite over InMemorySaver** — Persistent SQLite checkpointing ensures all chat history survives server restarts. With InMemorySaver, history is lost when the server stops.
+Each conversation maintains an independent ChromaDB vector store (`./chroma_db/{thread_id}`), ensuring uploaded documents remain isolated between conversations.
 
-**Streaming** — Token-by-token streaming via LangGraph's stream mode improves user experience by displaying responses in real time instead of waiting for the full output.
+### Persistent Memory
+
+SQLite checkpointing preserves chat history across application restarts, enabling long-running conversations.
+
+### High-quality Embeddings
+
+The chatbot uses **BAAI/bge-large-en-v1.5** embeddings for semantic document retrieval.
+
+### Streaming Responses
+
+Responses are streamed token-by-token to provide a more responsive user experience.
 
 ---
-### Example queries
 
-| Query | Tool Used |
-|---|---|
-| Who is the CEO according to the document? | RAG Tool |
-| What is the stock price of AAPL? | Stock Price Tool |
-| What is 25 multiplied by 48? | Calculator Tool |
-| What are the latest developments in AI? | DuckDuckGo Search |
+# RAG Evaluation
+
+The retrieval pipeline was evaluated using **RAGAS** on a benchmark set of document question-answer pairs.
+
+## Evaluation Results
+
+| Metric | Score |
+|---------|------:|
+| Faithfulness | **1.0000** |
+| Answer Relevancy | **0.7617** |
+| Context Precision | **0.6250** |
+| Context Recall | **1.0000** |
+
+## Improvement After Hybrid Retrieval
+
+| Metric | Similarity Search | Hybrid Retrieval |
+|---------|------------------:|-----------------:|
+| Faithfulness | **1.0000** | **1.0000** |
+| Answer Relevancy | **0.7000** | **0.7617** |
+| Context Precision | **0.6100** | **0.6250** |
+| Context Recall | N/A | **1.0000** |
+
+The hybrid retrieval pipeline improved answer relevancy and retrieval quality while maintaining perfect faithfulness.
+
+---
+
+# Example Queries
+
+| Query | Tool |
+|--------|------|
+| Who prepared these digital notes? | Hybrid RAG |
+| What is the stock price of AAPL? | Stock Tool |
+| What is 25 × 48? | Calculator |
+| Latest AI news | DuckDuckGo |
 | Who is Lionel Messi? | Wikipedia |
 
 ---
 
+# Future Improvements
 
-## Future Improvements
-
-- Expose backend via FastAPI for production deployment
-- Add support for multiple PDFs per thread
-- Deploy on Streamlit Cloud
-- Add authentication for multi-user support
+- FastAPI backend for production deployment
+- Multi-PDF retrieval per conversation
+- Authentication and multi-user support
+- Docker deployment
+- Cloud deployment
 
 ---
-
-
-
