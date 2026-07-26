@@ -3,6 +3,7 @@
 An intelligent **Agentic Retrieval-Augmented Generation (RAG)** chatbot built using **LangGraph** and **Streamlit**, powered by **OpenAI GPT-OSS 120B (via Groq)**. The chatbot autonomously selects the appropriate tool to answer user queries, including document retrieval, web search, Wikipedia search, mathematical calculations, and live stock price retrieval.
 
 The document retrieval pipeline uses **Hybrid Search (ChromaDB + BM25)** to combine semantic similarity and keyword-based retrieval, improving retrieval quality over similarity search alone.
+evaluated via RAGAS
 
 ---
 
