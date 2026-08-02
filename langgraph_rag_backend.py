@@ -16,6 +16,9 @@ from langchain_community.tools import WikipediaQueryRun
 from langchain_community.utilities import WikipediaAPIWrapper
 from langchain_community.retrievers import BM25Retriever
 from langchain.retrievers import EnsembleRetriever
+from langchain.retrievers import ContextualCompressionRetriever
+from langchain.retrievers.document_compressors import CrossEncoderReranker#re ranker 
+from langchain_community.cross_encoders import HuggingFaceCrossEncoder # re ranker model 
 
 
 #from langgraph.checkpoint.sqlite import sqlite3, sqlite3
@@ -31,11 +34,12 @@ load_dotenv()
 
 
 model = ChatGroq(model="openai/gpt-oss-120b")
+#model = ChatGroq(model="openai/gpt-oss-20b")
 
 embeddings = HuggingFaceEmbeddings(model_name="BAAI/bge-large-en-v1.5")
+reranker_model=HuggingFaceCrossEncoder(model_name="BAAI/bge-reranker-base")
 
 
-# PDF retriever store (per thread) — Sir's approach
 
 
 # key = thread_id, value = FAISS retriever for that thread's PDF
@@ -69,13 +73,13 @@ def ingest_pdf(file_bytes: bytes, thread_id: str, filename: Optional[str] = None
     try:
         loader = PyPDFLoader(temp_path)
         docs = loader.load()
-        print("2. PDFloaded")
+    
 
 
 
         # chunk_size=1000 — each chunk is 1000 characters
         # chunk_overlap=200 — 200 characters shared between chunks so context is not lost at boundaries
-        # separators — tries to split on paragraphs first, then lines, then words
+        
         splitter = RecursiveCharacterTextSplitter(
             chunk_size=1000, chunk_overlap=200, separators=["\n\n", "\n", " ", ""]
         )
@@ -84,8 +88,7 @@ def ingest_pdf(file_bytes: bytes, thread_id: str, filename: Optional[str] = None
         
         
 
-        # create chroma vectorstore and retriever
-        # k=4 means fetch top 4 most relevant chunks for a query
+        
         vector_store = Chroma.from_documents(chunks,embeddings,
                     persist_directory=f"./chroma_db/{thread_id}"
                 )
@@ -94,15 +97,21 @@ def ingest_pdf(file_bytes: bytes, thread_id: str, filename: Optional[str] = None
         
         
 
-        similarity_retriever= vector_store.as_retriever(search_type='similarity',search_kwargs={'k':4})
+        similarity_retriever= vector_store.as_retriever(search_type='similarity',search_kwargs={'k':10})
 
         #bm25 keyword search
         bm25_retriver=BM25Retriever.from_documents(chunks)
-        bm25_retriver.k = 4
+    
+        bm25_retriver.k = 10
         
         #hybrid retriever
         retriever=EnsembleRetriever(retrievers=[bm25_retriver,similarity_retriever], weights=[0.5,0.5])
-        
+
+        compressor=CrossEncoderReranker(model=reranker_model,top_n=4)
+        retriever=ContextualCompressionRetriever(base_retriever=retriever,base_compressor=compressor)
+
+
+    
 
 
 
@@ -128,7 +137,6 @@ def ingest_pdf(file_bytes: bytes, thread_id: str, filename: Optional[str] = None
             pass
 
 
-# tools
 
 search_tool = DuckDuckGoSearchResults(region='us-en')  # lang=parameter
 
@@ -166,24 +174,18 @@ def get_stock_price(symbol: str) -> dict:
 # thread_id is passed so we fetch the correct retriever for this specific chat thread
 # this is better than a global vectorstore — each thread has its own PDF
 @tool
-def rag_tool(query: str, thread_id: Optional[str] = None) -> dict:
+def rag_tool(query: str, thread_id: Optional[str] = None) -> str:
     """
     Retrieve relevant information from the uploaded PDF for this chat thread.
     Always include the thread_id when calling this tool.
     """
     retriever = _get_retriever(thread_id)
     if retriever is None:
-        return {
-            "error": "No document indexed for this chat. Upload a PDF first.",
-            "query": query,
-        }
+        return "Error: No document indexed for this chat. Upload a PDF first."
 
     result = retriever.invoke(query)
-    context = [doc.page_content for doc in result]   # extract text from each chunk
-    metadata = [doc.metadata for doc in result]       # extract metadata (page number etc)
-
-    return  "\n\n".join(context)
-
+    context = [doc.page_content for doc in result]
+    return "\n\n".join(context)
 
 
 tools = [get_stock_price, calculator, search_tool, rag_tool,wiki_tool]
@@ -196,25 +198,37 @@ class chatstate(TypedDict):
     messages: Annotated[list[BaseMessage], add_messages] # same state as chatbot
 
 
-#nodes
 
-#1st node
 def chat_node(state: chatstate, config=None):
-    """LLM node that may answer or request a tool call"""
 
     # extract thread_id from config so we can pass it in system message
-    # LLM needs to know the thread_id to pass it correctly when calling rag_tool
     thread_id = None
     if config and isinstance(config, dict):
         thread_id = config.get("configurable", {}).get("thread_id")
 
-    # system message tells LLM its role and instructs it to pass thread_id when using rag_tool
+    # system message  instructs it to pass thread_id when using rag_tool
     system_message = SystemMessage(
         content=(
-     f"You are a helpful assistant. Thread ID: {thread_id}. "
-        "For PDF questions use rag_tool with this thread_id. "
-        "For math use calculator. For stocks use get_stock_price. "
-        "For web use search. Give short clean answers only."
+            f"You are a helpful assistant. Thread ID: {thread_id}. "
+            "Rules for tool use:\n"
+            "1. For any question about an uploaded PDF or document, call the rag_tool exactly once with this thread_id.\n"
+            "2. Once rag_tool returns a result, treat it as the ground truth for that document, even if the "
+            "subject (company, product, person, etc.) is unfamiliar to you or sounds unverifiable. Do not call "
+            "any web search or Wikipedia tool to double check or supplement a rag_tool result -- the document is "
+            "the single source of truth for its own contents.\n"
+            "3. Only use a web search or Wikipedia tool when the question is clearly about general or current "
+            "knowledge unrelated to any uploaded document (e.g. news, public figures, general facts).\n"
+            "4. Never call more than one tool for the same question unless the question explicitly requires "
+            "combining information from two different sources.\n"
+            "5. After receiving a tool result, always produce a final answer immediately. Do not call the same "
+            "or a different tool again to re-verify a result you already have.\n"
+            "6. If rag_tool returns any non-empty text, you MUST base your answer strictly on that returned text. "
+            "Do not invent names, numbers, or facts that are not present in it, and do not say you lack the "
+            "document or the information once rag_tool has already returned content -- read it carefully and "
+            "answer directly from it.\n"
+            "7. If rag_tool returns an empty result or an explicit error message, only then say the information "
+            "is not available in the document.\n"
+            "Give short, clean answers only."
         )
     )
 
@@ -222,7 +236,6 @@ def chat_node(state: chatstate, config=None):
     response = model_with_tools.invoke(messages, config=config) # invoking llm with tools
 
     return {'messages': [response]}
-
 
 #2nd node tool node 
 tool_node = ToolNode(tools) #executes tool calls 
@@ -253,10 +266,10 @@ def retrieve_all_threads(): #->  how many thread id is currently in our db
 
 
 def thread_has_document(thread_id: str) -> bool:
-    # helper for frontend — check if this thread already has a PDF uploaded
+    # helper for frontend — check if this thread already has a pdf uploaded
     return str(thread_id) in _THREAD_RETRIEVERS
 
 
 def thread_document_metadata(thread_id: str) -> dict:
-    # helper for frontend — get filename, doc count, chunk count for this thread
+    # helper for frontend get filename, doc count, chunk count for this thread meas fr this partucular thead 
     return _THREAD_METADATA.get(str(thread_id), {})
