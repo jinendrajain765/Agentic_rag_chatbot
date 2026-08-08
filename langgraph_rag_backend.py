@@ -83,8 +83,7 @@ def ingest_pdf(file_bytes: bytes, thread_id: str, filename: Optional[str] = None
 
 
 
-        # chunk_size=1000 — each chunk is 1000 characters
-        # chunk_overlap=200 — 200 characters shared between chunks so context is not lost at boundaries
+       
         
         splitter = RecursiveCharacterTextSplitter(
             chunk_size=1000, chunk_overlap=200, separators=["\n\n", "\n", " ", ""]
@@ -243,9 +242,8 @@ def chat_node(state: chatstate, config=None):
 
     return {'messages': [response]}
 
-#2nd node tool node 
-tool_node = ToolNode(tools) #executes tool calls 
-# there will be 2 nodes 1st will be the chat node and another will be tool node {this is the inbuilt tool node}
+
+tool_node = ToolNode(tools) 
 
 graph = StateGraph(chatstate)
 
