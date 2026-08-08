@@ -21,6 +21,7 @@ from langchain.retrievers.document_compressors import CrossEncoderReranker#re ra
 from langchain_community.cross_encoders import HuggingFaceCrossEncoder # re ranker model 
 
 
+
 #from langgraph.checkpoint.sqlite import sqlite3, sqlite3
 
 
@@ -36,8 +37,13 @@ load_dotenv()
 model = ChatGroq(model="openai/gpt-oss-120b")
 #model = ChatGroq(model="openai/gpt-oss-20b")
 
-embeddings = HuggingFaceEmbeddings(model_name="BAAI/bge-large-en-v1.5")
-reranker_model=HuggingFaceCrossEncoder(model_name="BAAI/bge-reranker-base")
+# embeddings = HuggingFaceEmbeddings(model_name="BAAI/bge-large-en-v1.5")
+# reranker_model=HuggingFaceCrossEncoder(model_name="BAAI/bge-reranker-base")
+
+# had to change the latge embedding modelbecasue it was causing problem while deploying 
+
+embeddings = HuggingFaceEmbeddings(model_name="BAAI/bge-small-en-v1.5")
+reranker_model = HuggingFaceCrossEncoder(model_name="cross-encoder/ms-marco-MiniLM-L-6-v2")
 
 
 
@@ -251,6 +257,7 @@ graph.add_conditional_edges("chat_node", tools_condition) # from where is the co
 graph.add_edge("tools", "chat_node")
 
 checkpointer = SqliteSaver(conn=sqlite3.connect(database="chatbot.db", check_same_thread=False))
+#checkpointer=InMemorySaver()
 chatbot1 = graph.compile(checkpointer=checkpointer)
 
 
