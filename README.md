@@ -22,7 +22,7 @@ Adding a cross-encoder reranker on top of hybrid retrieval took **Context Precis
 
 - **Hybrid + Reranked RAG** — Upload a PDF and chat with it using dense + sparse retrieval, refined by a cross-encoder reranker before context reaches the LLM.
 - **Autonomous Tool Selection** — The agent decides which tool to invoke based on the query, governed by an explicit tool-use policy in the system prompt (see *Key Design Decisions* below).
-- **Web Search** — Real-time web search powered by DuckDuckGo.
+- **Web Search** — Real-time web search powered by TAVILY
 - **Wikipedia Search** — Retrieve factual information from Wikipedia.
 - **Calculator Tool** — Perform arithmetic operations.
 - **Live Stock Price Tool** — Retrieve real-time stock prices using Alpha Vantage.
@@ -50,7 +50,7 @@ LLM decides which tool to invoke
  ┌────┼──────────┬──────────┬──────────┬────────────┐
  │    │          │          │          │            │
  ▼    ▼          ▼          ▼          ▼
-DuckDuckGo   Calculator   Stocks   Wikipedia   Hybrid RAG
+Tavily  Calculator   Stocks   Wikipedia   Hybrid RAG
                                               │
                              ┌────────────────┴──────────────┐
                              │                                │
