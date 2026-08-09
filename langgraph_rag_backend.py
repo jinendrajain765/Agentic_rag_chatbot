@@ -41,10 +41,24 @@ model = ChatGroq(model="openai/gpt-oss-120b")
 # reranker_model=HuggingFaceCrossEncoder(model_name="BAAI/bge-reranker-base")
 
 # had to change the latge embedding modelbecasue it was causing problem while deploying 
+# one more problem occured while deploying on render (free render problem cannot load this models at once ,lazy load problem)loading this embedding model although changed the bge 1.5 gb model with small model and also the reranker but then also this problem came .writing this for understanding what proble came problem is to make func of model and calling that function whereever we wanna use embedding model
 
-embeddings = HuggingFaceEmbeddings(model_name="BAAI/bge-small-en-v1.5")
-reranker_model = HuggingFaceCrossEncoder(model_name="cross-encoder/ms-marco-MiniLM-L-6-v2")
+# embeddings = HuggingFaceEmbeddings(model_name="BAAI/bge-small-en-v1.5")
+# reranker_model = HuggingFaceCrossEncoder(model_name="cross-encoder/ms-marco-MiniLM-L-6-v2")
+embeddings = None
+reranker_model = None
 
+def get_embeddings():
+    global embeddings
+    if embeddings is None:
+        embeddings = HuggingFaceEmbeddings(model_name="BAAI/bge-small-en-v1.5")
+    return embeddings
+
+def get_reranker():
+    global reranker_model
+    if reranker_model is None:
+        reranker_model = HuggingFaceCrossEncoder(model_name="cross-encoder/ms-marco-MiniLM-L-6-v2")
+    return reranker_model
 
 
 
@@ -94,7 +108,7 @@ def ingest_pdf(file_bytes: bytes, thread_id: str, filename: Optional[str] = None
         
 
         
-        vector_store = Chroma.from_documents(chunks,embeddings,
+        vector_store = Chroma.from_documents(chunks,get_embeddings(),
                     persist_directory=f"./chroma_db/{thread_id}"
                 )
          
@@ -112,7 +126,8 @@ def ingest_pdf(file_bytes: bytes, thread_id: str, filename: Optional[str] = None
         #hybrid retriever
         retriever=EnsembleRetriever(retrievers=[bm25_retriver,similarity_retriever], weights=[0.5,0.5])
 
-        compressor=CrossEncoderReranker(model=reranker_model,top_n=4)
+        #reranker
+        compressor=CrossEncoderReranker(model=get_reranker(),top_n=4)
         retriever=ContextualCompressionRetriever(base_retriever=retriever,base_compressor=compressor)
 
 
