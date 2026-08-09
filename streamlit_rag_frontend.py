@@ -140,7 +140,7 @@ for thread_id in st.session_state['chat_threads'][::-1]: # to diaplay chat threa
 
 
 
-# PDF UPLOAD SECTION — RAG feature (Sir's per-thread approach)
+
 # each thread has its own PDF — ingest_pdf stores retriever mapped to thread_id
 # thread_has_document checks if this thread already has a PDF loaded
 # thread_document_metadata shows filename, doc count, chunk count in UI
@@ -207,25 +207,20 @@ if user_input and user_input.strip(): #if user gives input
                      
     #            )
     #       )
-# we are printing this ai message because while the llm was giving the rag ans it was giving the full metadata of the doc means the output of the rag he was printing it full because of this we were seeing full mertadata with the actual ans but we need the actual ans so we will print the raw rag ans 
 
-# by default chatbot.stream() gives us ALL message chunks including
-# tool call chunks (raw tool output like JSON, metadata, chunks from PDF)
-# and AI response chunks (the actual clean answer)
-# the problem was LLM was printing raw tool output to the user which looks bad
-# so we added a filter condition:
-# message_chunk.type == 'AIMessageChunk' → only show AI response chunks
-# not getattr(message_chunk, 'tool_call_chunks', None) → skip tool call chunks
-# this way user only sees the clean final answer — not the raw tool output
     with st.chat_message('ai'):
-        ai_message = st.write_stream(
-             message_chunk.content for message_chunk, metadata in chatbot1.stream(
-                  {'messages': [HumanMessage(content=user_input)]},
-                config=CONFIG,
-                stream_mode='messages'
-             )
-             if hasattr(message_chunk, 'content')
-             and message_chunk.content
-             and message_chunk.type == 'AIMessageChunk'
-        )
+        try:
+            ai_message = st.write_stream(
+                 message_chunk.content for message_chunk, metadata in chatbot1.stream(
+                      {'messages': [HumanMessage(content=user_input)]},
+                    config=CONFIG,
+                    stream_mode='messages'
+                 )
+                 if hasattr(message_chunk, 'content')
+                 and message_chunk.content
+                 and message_chunk.type == 'AIMessageChunk'
+            )
+        except Exception as e:
+            ai_message = "Sorry, I hit an error processing that — please try rephrasing your question or ask again."
+            st.error(ai_message)
     st.session_state['message_history'].append({'role':'ai', 'content': ai_message})

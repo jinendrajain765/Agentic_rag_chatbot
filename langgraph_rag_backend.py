@@ -9,7 +9,7 @@ from langgraph.graph import START, END, StateGraph
 from langchain_groq import ChatGroq
 from langchain_community.document_loaders import PyPDFLoader
 from langchain_core.messages import BaseMessage, SystemMessage
-from langchain_community.tools import DuckDuckGoSearchResults
+
 from langgraph.checkpoint.sqlite import SqliteSaver
 import sqlite3
 from langchain_community.tools import WikipediaQueryRun
@@ -19,6 +19,7 @@ from langchain.retrievers import EnsembleRetriever
 from langchain.retrievers import ContextualCompressionRetriever
 from langchain.retrievers.document_compressors import CrossEncoderReranker#re ranker 
 from langchain_community.cross_encoders import HuggingFaceCrossEncoder # re ranker model 
+from langchain_community.tools.tavily_search import TavilySearchResults
 
 
 
@@ -158,7 +159,8 @@ def ingest_pdf(file_bytes: bytes, thread_id: str, filename: Optional[str] = None
 
 
 
-search_tool = DuckDuckGoSearchResults(region='us-en')  # lang=parameter
+
+search_tool = TavilySearchResults(max_results=5)
 
 wiki_tool=WikipediaQueryRun(api_wrapper=WikipediaAPIWrapper())
 @tool
