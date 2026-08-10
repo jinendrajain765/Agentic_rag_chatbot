@@ -150,7 +150,7 @@ for thread_id in st.session_state['chat_threads'][::-1]: # to diaplay chat threa
 st.sidebar.markdown("---")
 st.sidebar.header("Chat with PDF")
 
-uploaded_file = st.sidebar.file_uploader("Upload a PDF", type=["pdf"])
+uploaded_file = st.sidebar.file_uploader("Upload your PDF", type=["pdf"])
 
 if uploaded_file:
      # thread_has_document checks if this thread_id already has a PDF in _THREAD_RETRIEVERS
@@ -220,7 +220,14 @@ if user_input and user_input.strip(): #if user gives input
                  and message_chunk.content
                  and message_chunk.type == 'AIMessageChunk'
             )
+            if not ai_message:
+                response = chatbot1.invoke({'messages': [HumanMessage(content=user_input)]}, config=CONFIG)
+                ai_message = response['messages'][-1].content
+                st.text(ai_message)
         except Exception as e:
-            ai_message = "Sorry, I hit an error processing that — please try rephrasing your question or ask again."
-            st.error(ai_message)
+          ai_message = "Sorry, I hit an error processing that — please try rephrasing your question or ask again."
+          st.error(ai_message)
+          import traceback
+          traceback.print_exc()
+
     st.session_state['message_history'].append({'role':'ai', 'content': ai_message})

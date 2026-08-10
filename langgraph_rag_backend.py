@@ -32,6 +32,7 @@ from langchain_text_splitters import RecursiveCharacterTextSplitter
 import tempfile
 import os
 from dotenv import load_dotenv
+from langchain_community.embeddings import HuggingFaceInferenceAPIEmbeddings
 load_dotenv()
 
 
@@ -60,7 +61,6 @@ def get_reranker():
     if reranker_model is None:
         reranker_model = HuggingFaceCrossEncoder(model_name="cross-encoder/ms-marco-MiniLM-L-6-v2")
     return reranker_model
-
 
 
 # key = thread_id, value = FAISS retriever for that thread's PDF
