@@ -11,6 +11,7 @@ from dotenv import load_dotenv
 load_dotenv()
 import uuid
 import streamlit as st
+from langchain_core.messages import AIMessage
 
 # in this database backend only change u have to do is in the session setup( in the chat_threads to see the diff see the previous front streaming code and this one)
 # why changes in this = see in previous code as soon the we start out chatbot the chat_threads is null means there is no pevious thread_id this was because we were using imemorysaver because of this if we refresh the page or restart our bot after 2-3 days there will be no history because it is stored in ram but now we are using sql lite database we have the previous chat and history stored because of this we can show the previous history, we were not having permanent storage(because we have past threads) but now we have it 
@@ -126,13 +127,15 @@ for thread_id in st.session_state['chat_threads'][::-1]: # to diaplay chat threa
           # compatibility break na ho uske lia coode 
           temp_messages = []
           for message in messages:
-               if isinstance(message, HumanMessage):   # if current message instance is human message  if we will store in the role variable "user"
+               if isinstance(message, HumanMessage):
                     role = 'user'
-               else:
-                    role = "ai" 
-
-               temp_messages.append({"role": role, "content": message.content})
-
+                    temp_messages.append({"role": role, "content": message.content})
+               elif isinstance(message, AIMessage) and message.content:
+               # only include AI messages that have real text content
+               # (skips AI messages that only contain tool_calls with no content)
+                    role = "ai"
+                    temp_messages.append({"role": role, "content": message.content})
+     # ToolMessage and empty AIMessages are silently skipped
                # in the above the the previous messages we get the messages in the format ["role":"user","content": hi]-> user , {'role':'assiatant', 'content':"hello"} this swas th format, the probelm we were getting all the unusefull message like metadata for that we are converting this message format to this once which we have defined in this line so that messages history loads properly
                # we will come out of the loop and equal this temp message to session states message history
 
