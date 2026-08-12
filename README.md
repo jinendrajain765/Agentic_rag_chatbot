@@ -83,12 +83,12 @@ Tavily  Calculator   Stocks   Wikipedia   Hybrid RAG
 | Agent Framework | LangGraph |
 | Frontend | Streamlit |
 | Embedding Model | HuggingFace BAAI/bge-large-en-v1.5 |
-| Reranker | HuggingFace BAAI/bge-reranker-base (cross-encoder) |
+| Reranker | cross-encoder/ms-marco-MiniLM-L-6-v2 |
 | Vector Database | ChromaDB |
 | Keyword Retriever | BM25 |
 | Hybrid Retriever | LangChain EnsembleRetriever |
 | Persistent Memory | SQLite Checkpointer |
-| Web Search | DuckDuckGo |
+| Web Search | Tavily |
 | Knowledge Search | Wikipedia |
 | Stock API | Alpha Vantage |
 | Evaluation | RAGAS |
