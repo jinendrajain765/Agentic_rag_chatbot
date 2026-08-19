@@ -82,8 +82,8 @@ Tavily  Calculator   Stocks   Wikipedia   Hybrid RAG
 | LLM | OpenAI GPT-OSS 120B (via Groq) |
 | Agent Framework | LangGraph |
 | Frontend | Streamlit |
-| Embedding Model | HuggingFace BAAI/bge-large-en-v1.5 |
-| Reranker | cross-encoder/ms-marco-MiniLM-L-6-v2 |
+| Embedding Model | HuggingFace "BAAI/bge-small-en-v1.5 |
+| Reranker |cross-encoder/ms-marco-MiniLM-L-6-v2|
 | Vector Database | ChromaDB |
 | Keyword Retriever | BM25 |
 | Hybrid Retriever | LangChain EnsembleRetriever |
