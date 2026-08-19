@@ -162,9 +162,6 @@ This allows the chatbot to dynamically decide which tool to use without hardcode
 
 The retrieval pipeline combines **semantic search (ChromaDB)** with **keyword search (BM25)** via LangChain's `EnsembleRetriever`, then re-scores the merged candidate set with a **cross-encoder reranker** (`bge-reranker-base`) before the top results reach the LLM. Hybrid search alone widened recall but left retrieval noise in the final context; the reranker was added specifically to address that gap — measured directly through RAGAS Context Precision (see *RAG Evaluation* below).
 
-### Tool-Use Policy
-
-The agent's system prompt encodes an explicit tool-use policy: once `rag_tool` returns content for an uploaded document, that result is treated as ground truth and is not re-verified against external tools, even for unfamiliar or fictional-sounding subject matter. This was a deliberate fix after evaluation surfaced cases where the agent second-guessed correct retrieval results by redundantly invoking web search, which cost accuracy and latency for no benefit.
 
 ### Per-thread Document Isolation
 
@@ -172,11 +169,11 @@ Each conversation maintains an independent ChromaDB vector store (`./chroma_db/{
 
 ### Persistent Memory
 
-SQLite checkpointing preserves chat history across application restarts, enabling long-running conversations.
+SQLite checkpointing preserves chat history across application restarts, enabling long-running conversations. 
 
 ### High-quality Embeddings
 
-The chatbot uses **BAAI/bge-large-en-v1.5** embeddings for semantic document retrieval.
+The chatbot uses **BAAI/bge-small-en-v1.5** embeddings for semantic document retrieval. 
 
 ### Streaming Responses
 
