@@ -212,7 +212,7 @@ Full per-question results are available in [`ragas_results.csv`](./ragas_results
 | Who prepared these digital notes? | Hybrid RAG |
 | What is the stock price of AAPL? | Stock Tool |
 | What is 25 × 48? | Calculator |
-| Latest AI news | DuckDuckGo |
+| Latest AI news | Tavily |
 | Who is Lionel Messi? | Wikipedia |
 
 ---
