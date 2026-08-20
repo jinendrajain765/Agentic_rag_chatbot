@@ -160,7 +160,7 @@ This allows the chatbot to dynamically decide which tool to use without hardcode
 
 ### Hybrid Retrieval + Reranking
 
-The retrieval pipeline combines **semantic search (ChromaDB)** with **keyword search (BM25)** via LangChain's `EnsembleRetriever`, then re-scores the merged candidate set with a **cross-encoder reranker** (`bge-reranker-base`) before the top results reach the LLM. Hybrid search alone widened recall but left retrieval noise in the final context; the reranker was added specifically to address that gap — measured directly through RAGAS Context Precision (see *RAG Evaluation* below).
+The retrieval pipeline combines **semantic search (ChromaDB)** with **keyword search (BM25)** via LangChain's `EnsembleRetriever`, then re-scores the merged candidate set with a **cross-encoder reranker** (cross-encoder/ms-marco-MiniLM-L-6-v2|) before the top results reach the LLM. Hybrid search alone widened recall but left retrieval noise in the final context; the reranker was added specifically to address that gap — measured directly through RAGAS Context Precision (see *RAG Evaluation* below).
 
 
 ### Per-thread Document Isolation
