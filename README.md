@@ -171,9 +171,6 @@ Each conversation maintains an independent ChromaDB vector store (`./chroma_db/{
 
 SQLite checkpointing preserves chat history across application restarts, enabling long-running conversations. 
 
-### High-quality Embeddings
-
-The chatbot uses **BAAI/bge-small-en-v1.5** embeddings for semantic document retrieval. 
 
 ### Streaming Responses
 
