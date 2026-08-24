@@ -9,7 +9,7 @@ Adding a cross-encoder reranker on top of hybrid retrieval took **Context Precis
 ## Highlights
 
 - Hybrid Retrieval — **ChromaDB (dense) + BM25 (sparse)** via LangChain's `EnsembleRetriever`
-- **Cross-encoder reranking** (`BAAI/bge-reranker-base`) on top of hybrid retrieval to filter retrieval noise
+- **Cross-encoder reranking** (ms-marco-MiniLM-L-6-v2) on top of hybrid retrieval to filter retrieval noise
 - LangGraph ReAct agent with autonomous, prompt-governed tool selection
 - Per-thread persistent PDF knowledge base with isolated vector stores
 - SQLite-based persistent conversational memory
