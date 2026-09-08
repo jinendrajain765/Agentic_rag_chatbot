@@ -58,15 +58,7 @@ ground_truths = [
 with open(PDF_PATH, "rb") as f:
     ingest_pdf(file_bytes=f.read(), thread_id=THREAD_ID, filename=PDF_PATH)
 
-# problem came during evaluating
-# Each chat call below uses a different thread_id (THREAD_ID_0, THREAD_ID_1, ...)
-# so conversation history doesn't accumulate across questions (this avoids the
-# TPM crash from growing history). But rag_tool looks up the retriever by
-# THAT thread_id, and it was only ever registered under the base THREAD_ID --
-# so every rag_tool call during eval was failing silently, causing the model
-# to fall back to web search and loop. Fix: register the same retriever/
-# metadata objects under every per-question sub-thread too. This is just a
-# dict assignment (no re-embedding), so it's instant.
+
 base_retriever = _THREAD_RETRIEVERS[str(THREAD_ID)]
 base_metadata = _THREAD_METADATA[str(THREAD_ID)]
 for i in range(len(test_questions)):
