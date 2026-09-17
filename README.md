@@ -195,7 +195,6 @@ The retrieval pipeline was evaluated using **RAGAS** across three configurations
 
 **Context Precision improved from 0.625 to a perfect 1.0** after adding the reranker, confirming it successfully filters retrieval noise that hybrid search alone left behind. Context Recall held at a perfect 1.0, meaning no relevant information was lost in the process. Answer Relevancy also improved.
 
-Faithfulness dropped slightly in the reranked run (0.79 vs. 1.00) on a small subset of questions where the agent occasionally declined to answer or introduced an unsupported detail despite the correct context being retrieved — a generation-layer issue, not a retrieval failure, since Context Precision and Recall were both perfect on those same rows. This was traced to agent tool-routing behavior and addressed via the tool-use policy described above.
 
 Full per-question results are available in [`ragas_results.csv`](./ragas_results.csv) (baseline) and [`ragas_results_with_reranker.csv`](./ragas_results_with_reranker.csv) (post-reranker).
 
