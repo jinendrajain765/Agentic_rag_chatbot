@@ -1,6 +1,6 @@
 # Agentic RAG Chatbot
 
-An agentic Retrieval-Augmented Generation chatbot that autonomously routes between document retrieval, web search, Wikipedia, live stock prices, and calculation tools — built on **LangGraph**, served through **Groq (GPT-OSS 120B)**, and rigorously evaluated with **RAGAS**.
+An agentic Retrieval-Augmented Generation chatbot that autonomously routes between document retrieval, web search, Wikipedia, live stock prices, and calculation tools — built on **LangGraph**, served through **Groq (GPT-OSS 120B)**, and rigorously evaluated with **RAGAS** and monitored using **langsmith**.
 
 Adding a cross-encoder reranker on top of hybrid retrieval took **Context Precision from 0.625 to 1.0** and **Context Recall to a perfect 1.0**, with retrieval quality independently verified across two full RAGAS evaluation passes on unseen, non-parametric content the model could not have memorized during training.
 
@@ -15,6 +15,7 @@ Adding a cross-encoder reranker on top of hybrid retrieval took **Context Precis
 - SQLite-based persistent conversational memory
 - Streaming responses in Streamlit
 - Evaluated end-to-end using **RAGAS**, with a documented before/after comparison across three retrieval configurations
+- LangSmith observability with tracing and latency monitoring
 
 ---
 
@@ -30,6 +31,7 @@ Adding a cross-encoder reranker on top of hybrid retrieval took **Context Precis
 - **Per-thread PDF Isolation** — Each conversation maintains an independent document index and memory.
 - **Resume Previous Conversations** — Continue any previous chat from the sidebar.
 - **Streaming Responses** — Token-by-token response generation for improved user experience.
+  - **Observability** — LangSmith tracing for monitoring agent executions, latency, errors, and token usage.
 
 ---
 
@@ -198,6 +200,17 @@ Faithfulness dropped slightly in the reranked run (0.79 vs. 1.00) on a small sub
 Full per-question results are available in [`ragas_results.csv`](./ragas_results.csv) (baseline) and [`ragas_results_with_reranker.csv`](./ragas_results_with_reranker.csv) (post-reranker).
 
 ---
+## Observability
+
+**LangSmith** is integrated for tracing and monitoring the chatbot's execution flow.
+
+It is used to track:
+- Agent and tool executions
+- End-to-end latency
+- Errors during execution
+- Token usage and cost
+
+Across 37 traced runs, the application recorded a **1.10s P50 latency**.
 
 # Example Queries
 
