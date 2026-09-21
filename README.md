@@ -63,7 +63,7 @@ Tavily  Calculator   Stocks   Wikipedia   Hybrid RAG
                                               │
                                               ▼
                                   Cross-Encoder Reranker
-                                     (bge-reranker-base)
+                                     (ms-macro-MiliLM)
                                               │
                                               ▼
                                     Top-k Reranked Context
