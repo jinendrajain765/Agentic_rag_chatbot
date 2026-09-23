@@ -228,7 +228,7 @@ def chat_node(state: chatstate, config=None):
     if config and isinstance(config, dict):
         thread_id = config.get("configurable", {}).get("thread_id")
 
-    # system message  instructs it to pass thread_id when using rag_tool
+    
     system_message = SystemMessage(
         content=(
             f"You are a helpful assistant. Thread ID: {thread_id}. "
@@ -255,7 +255,7 @@ def chat_node(state: chatstate, config=None):
     )
 
     messages = [system_message, *state["messages"]]
-    response = model_with_tools.invoke(messages, config=config) # invoking llm with tools
+    response = model_with_tools.invoke(messages, config=config) 
 
     return {'messages': [response]}
 
