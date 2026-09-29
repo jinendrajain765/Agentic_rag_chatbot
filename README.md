@@ -2,7 +2,7 @@
 
 An agentic Retrieval-Augmented Generation chatbot that autonomously routes between document retrieval, web search, Wikipedia, live stock prices, and calculation tools — built on **LangGraph**, served through **Groq (GPT-OSS 120B)**, and rigorously evaluated with **RAGAS** and monitored using **langsmith**.
 
-Adding a cross-encoder reranker on top of hybrid retrieval took **Context Precision from 0.625 to 1.0** and **Context Recall to a perfect 1.0**, with retrieval quality independently verified across two full RAGAS evaluation passes on unseen, non-parametric content the model could not have memorized during training.
+Adding a cross-encoder reranker on top of hybrid retrieval took **Context Precision from 0.625 to 1.0** and **Context Recall to a perfect 1.0**, with retrieval quality independently verified across two full RAGAS evaluation passes on unseen,
 
 ---
 
