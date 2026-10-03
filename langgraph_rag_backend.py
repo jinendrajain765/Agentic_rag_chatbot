@@ -3,7 +3,7 @@ import requests
 from typing import Annotated, TypedDict, Any, Dict, Optional
 from langgraph.graph.message import add_messages #reducer
 from dotenv import load_dotenv
-from langchain_core.tools import tool  # to create out custom tool
+from langchain_core.tools import tool  
 from langgraph.prebuilt import ToolNode, tools_condition # tool condition is used in edges 
 from langgraph.graph import START, END, StateGraph
 from langchain_groq import ChatGroq
@@ -24,7 +24,7 @@ from langchain_community.tools.tavily_search import TavilySearchResults
 
 
 
-#from langgraph.checkpoint.sqlite import sqlite3, sqlite3
+
 
 
 from langchain_huggingface import HuggingFaceEmbeddings
@@ -216,7 +216,7 @@ tools = [get_stock_price, calculator, search_tool, rag_tool,wiki_tool]
 model_with_tools = model.bind_tools(tools)
 
 
-# state
+
 class chatstate(TypedDict):
     messages: Annotated[list[BaseMessage], add_messages] # same state as chatbot
 
