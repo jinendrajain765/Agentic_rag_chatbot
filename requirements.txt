@@ -15,3 +15,4 @@ duckduckgo-search
 pypdf
 requests
 wikipedia
+pdfplumber

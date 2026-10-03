@@ -7,7 +7,8 @@ from langchain_core.tools import tool  # to create out custom tool
 from langgraph.prebuilt import ToolNode, tools_condition # tool condition is used in edges 
 from langgraph.graph import START, END, StateGraph
 from langchain_groq import ChatGroq
-from langchain_community.document_loaders import PyPDFLoader
+# from langchain_community.document_loaders import PyPDFLoader
+from langchain_community.document_loaders import PDFPlumberLoader
 from langchain_core.messages import BaseMessage, SystemMessage
 
 from langgraph.checkpoint.sqlite import SqliteSaver
@@ -92,7 +93,7 @@ def ingest_pdf(file_bytes: bytes, thread_id: str, filename: Optional[str] = None
         
 
     try:
-        loader = PyPDFLoader(temp_path)
+        loader = PDFPlumberLoader(temp_path)
         docs = loader.load()
     
 
