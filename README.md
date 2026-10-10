@@ -1,4 +1,4 @@
-# Agentic RAG Chatbot
+# Agentic RAG system
 
 An agentic Retrieval-Augmented Generation chatbot that autonomously routes between document retrieval, web search, Wikipedia, live stock prices, and calculation tools — built on **LangGraph**, served through **Groq (GPT-OSS 120B)**, and rigorously evaluated with **RAGAS** and monitored using **langsmith**.
 
