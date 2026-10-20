@@ -7,7 +7,6 @@ from langchain_core.tools import tool
 from langgraph.prebuilt import ToolNode, tools_condition # tool condition is used in edges 
 from langgraph.graph import START, END, StateGraph
 from langchain_groq import ChatGroq
-# from langchain_community.document_loaders import PyPDFLoader
 from langchain_community.document_loaders import PDFPlumberLoader
 from langchain_core.messages import BaseMessage, SystemMessage
 
@@ -21,19 +20,14 @@ from langchain.retrievers import ContextualCompressionRetriever
 from langchain.retrievers.document_compressors import CrossEncoderReranker#re ranker 
 from langchain_community.cross_encoders import HuggingFaceCrossEncoder # re ranker model 
 from langchain_community.tools.tavily_search import TavilySearchResults
-
-
-
-
-
-
 from langchain_huggingface import HuggingFaceEmbeddings
 from langchain_community.vectorstores import Chroma
 from langchain_text_splitters import RecursiveCharacterTextSplitter
 import tempfile
 import os
 from dotenv import load_dotenv
-from langchain_community.embeddings import HuggingFaceInferenceAPIEmbeddings
+from bs4 import BeautifulSoup
+from urllib.parse import urlparse
 load_dotenv()
 
 
@@ -164,25 +158,6 @@ def ingest_pdf(file_bytes: bytes, thread_id: str, filename: Optional[str] = None
 search_tool = TavilySearchResults(max_results=5)
 
 wiki_tool=WikipediaQueryRun(api_wrapper=WikipediaAPIWrapper())
-@tool
-def calculator(first_num: float, second_num: float, operation: str) -> dict:
-    """perform a basic arithmetic operation on two numbers. supported operations: add, sub, mul, div"""
-    try:
-        if operation == "add":
-            result = first_num + second_num
-        elif operation == "sub":
-            result = first_num - second_num
-        elif operation == "mul":
-            result = first_num * second_num
-        elif operation == "div":
-            if second_num == 0:
-                return {"error": "division by 0 is not allowed"}
-            result = first_num / second_num
-        else:
-            return {"error": f"unsupported operation '{operation}'"}
-        return {"result": result}
-    except Exception as e:
-        return {"error": str(e)}
 
 @tool
 def get_stock_price(symbol: str) -> dict:
@@ -192,6 +167,23 @@ def get_stock_price(symbol: str) -> dict:
     r = requests.get(url)
     return r.json()
 
+@tool
+def read_webpage(url: str) -> str:
+    """Read the text of one specific web page from its URL so it can be summarized or questioned.
+    Use when the user shares a link (article, blog post, documentation, GitHub page)."""
+    parsed = urlparse(url)
+    if parsed.scheme not in ("http", "https") or parsed.hostname in (None, "localhost", "127.0.0.1", "0.0.0.0"):
+        return "Error: only public http/https links are allowed."
+    try:
+        r = requests.get(url, headers={"User-Agent": "Mozilla/5.0"}, timeout=10)
+        r.raise_for_status()
+        soup = BeautifulSoup(r.text, "html.parser")
+        for tag in soup(["script", "style", "nav", "footer", "header"]):
+            tag.decompose()
+        text = " ".join(soup.get_text(separator=" ").split())
+        return text[:5000] if text else "Error: no readable text found on that page."
+    except Exception as e:
+        return f"Error: could not read page ({e})"
 
 
 # thread_id is passed so we fetch the correct retriever for this specific chat thread
@@ -211,7 +203,7 @@ def rag_tool(query: str, thread_id: Optional[str] = None) -> str:
     return "\n\n".join(context)
 
 
-tools = [get_stock_price, calculator, search_tool, rag_tool,wiki_tool]
+tools = [get_stock_price,search_tool, rag_tool,wiki_tool,read_webpage]
 
 model_with_tools = model.bind_tools(tools)
 
@@ -251,6 +243,7 @@ def chat_node(state: chatstate, config=None):
             "answer directly from it.\n"
             "7. If rag_tool returns an empty result or an explicit error message, only then say the information "
             "is not available in the document.\n"
+            "When the user shares a web link, call read_webpage with that URL and answer from the page content.\n"
             "Give short, clean answers only."
         )
     )
