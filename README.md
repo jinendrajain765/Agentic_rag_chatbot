@@ -1,6 +1,6 @@
 # Agentic RAG system
 
-An agentic Retrieval-Augmented Generation chatbot that autonomously routes between document retrieval, web search, Wikipedia, live stock prices, and calculation tools — built on **LangGraph**, served through **Groq (GPT-OSS 120B)**, and rigorously evaluated with **RAGAS** and monitored using **langsmith**.
+An agentic Retrieval-Augmented Generation chatbot that autonomously routes between document retrieval, web search, Wikipedia, live stock prices, and web reader tools — built on **LangGraph**, served through **Groq (GPT-OSS 120B)**, and rigorously evaluated with **RAGAS** and monitored using **langsmith**.
 
 Adding a cross-encoder reranker on top of hybrid retrieval took **Context Precision from 0.625 to 1.0** and **Context Recall to a perfect 1.0**, with retrieval quality independently verified across two full RAGAS evaluation passes on unseen,
 
@@ -25,7 +25,7 @@ Adding a cross-encoder reranker on top of hybrid retrieval took **Context Precis
 - **Autonomous Tool Selection** — The agent decides which tool to invoke based on the query, governed by an explicit tool-use policy in the system prompt (see *Key Design Decisions* below).
 - **Web Search** — Real-time web search powered by TAVILY
 - **Wikipedia Search** — Retrieve factual information from Wikipedia.
-- **Calculator Tool** — Perform arithmetic operations.
+- **Reader Tool** — Fetch and extract readable text from webpages using `requests` and `BeautifulSoup`, allowing the agent to retrieve information directly from a provided URL.
 - **Live Stock Price Tool** — Retrieve real-time stock prices using Alpha Vantage.
 - **Persistent Chat Memory** — SQLite checkpointing preserves conversation history across application restarts.
 - **Per-thread PDF Isolation** — Each conversation maintains an independent document index and memory.
@@ -52,7 +52,7 @@ LLM decides which tool to invoke
  ┌────┼──────────┬──────────┬──────────┬────────────┐
  │    │          │          │          │            │
  ▼    ▼          ▼          ▼          ▼
-Tavily  Calculator   Stocks   Wikipedia   Hybrid RAG
+Tavily  reader   Stocks   Wikipedia   Hybrid RAG
                                               │
                              ┌────────────────┴──────────────┐
                              │                                │
@@ -217,7 +217,6 @@ Across 37 traced runs, the application recorded a **1.10s P50 latency**.
 |--------|------|
 | Who prepared these digital notes? | Hybrid RAG |
 | What is the stock price of AAPL? | Stock Tool |
-| What is 25 × 48? | Calculator |
 | Latest AI news | Tavily |
 | Who is Lionel Messi? | Wikipedia |
 
