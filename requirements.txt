@@ -16,3 +16,4 @@ pypdf
 requests
 wikipedia
 pdfplumber
+beautifulsoup4
