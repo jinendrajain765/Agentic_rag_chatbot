@@ -209,7 +209,7 @@ It is used to track:
 - Errors during execution
 - Token usage and cost
 
-Across 37 traced runs, the application recorded a **1.10s P50 latency**.
+Across 50 traced runs, the application recorded a **1.10s P50 latency**.
 
 # Example Queries
 
